@@ -38,6 +38,6 @@ const handleStartClick = () => {
       </button>
     </div>
 
-    <Segments :milliseconds="milliseconds" />
+    <Segments :draggable="!isStarted" :milliseconds="milliseconds" />
   </div>
 </template>

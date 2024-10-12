@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { Segment } from "../types";
 
-const { data, progress, onChangeName } = defineProps<{
-  data: Segment;
-  progress: number;
-  onChangeName: (value: string | undefined) => void;
-}>();
+const { data, progress, onChangeName, isDragging, onDragStart, onDragEnd } =
+  defineProps<{
+    data: Segment;
+    progress: number;
+    onChangeName: (value: string | undefined) => void;
+    isDragging: boolean;
+    onDragStart: () => void;
+    onDragEnd: () => void;
+  }>();
 
 const colorsMap = {
   red: "bg-red-500",
@@ -18,11 +22,52 @@ const handleChangeName = (e: Event) => {
 
   onChangeName(value);
 };
+
+const handleDragStart = (e: DragEvent) => {
+  const dragEle = e.target;
+
+  if (!dragEle || !e.dataTransfer) return;
+
+  const ghostEle = (dragEle as any).cloneNode(true);
+  ghostEle.classList.add(
+    "dragging",
+    colorsMap[data.progressColor ?? "red"],
+    "bg-opacity-65",
+  );
+  ghostEle.style.width = (dragEle as any).offsetWidth + "px";
+  ghostEle.querySelector(".progress").remove();
+
+  document.body.appendChild(ghostEle);
+
+  const nodeRect = (dragEle as any).getBoundingClientRect();
+
+  e.dataTransfer.setDragImage(
+    ghostEle,
+    e.clientX - nodeRect.left,
+    e.clientY - nodeRect.top,
+  );
+
+  const handleDragEnd = () => {
+    ghostEle.remove();
+    dragEle.removeEventListener("dragend", handleDragEnd);
+  };
+  dragEle.addEventListener("dragend", handleDragEnd);
+
+  onDragStart();
+};
 </script>
 
 <template>
   <div
-    class="group relative grid h-36 place-items-center overflow-hidden rounded text-2xl ring-[1px] ring-zinc-800 ring-offset-[0px]"
+    :class="[
+      'group relative z-10 grid h-36 place-items-center overflow-hidden rounded border border-zinc-800 text-2xl',
+      isDragging && colorsMap[data.progressColor ?? 'red'],
+      isDragging && '!border-transparent text-white',
+    ]"
+    draggable="true"
+    @dragstart="handleDragStart"
+    @dragend="onDragEnd"
+    :style="{ flexGrow: data.time }"
   >
     {{ data.time }}s
 
@@ -36,7 +81,7 @@ const handleChangeName = (e: Event) => {
         { '!bg-transparent': progress === 0 },
         colorsMap[data.progressColor ?? 'red'],
       ]"
-      class="absolute inset-0 overflow-hidden"
+      class="progress absolute inset-0 overflow-hidden"
     >
       <div
         :style="{ transform: `translateX(${100 - progress}%)` }"
@@ -66,3 +111,9 @@ const handleChangeName = (e: Event) => {
     </div>
   </div>
 </template>
+
+<style>
+.dragging {
+  @apply fixed left-[-9999px] border-none text-white;
+}
+</style>

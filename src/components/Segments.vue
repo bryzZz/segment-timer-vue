@@ -3,15 +3,21 @@ import { ref, computed } from "vue";
 
 import Segment from "./Segment.vue";
 import { Segment as SegmentType } from "../types";
+import move from "../utils/move";
 
-const { milliseconds } = defineProps<{ milliseconds: number }>();
+const { draggable, milliseconds } = defineProps<{
+  draggable: boolean;
+  milliseconds: number;
+}>();
 
-const segments = ref([
-  { time: 5 },
-  { time: 30, progressColor: "green" },
-  { time: 5, progressColor: "blue" },
-  { time: 5 },
-] as SegmentType[]);
+const dragId = ref<string | null>(null);
+
+const segments = ref<SegmentType[]>([
+  { id: "0", time: 5, progressColor: "green", name: "Вдох" },
+  { id: "1", time: 30, progressColor: "red", name: "Задержка" },
+  { id: "2", time: 5, progressColor: "green", name: "Выдох" },
+  { id: "3", time: 5, progressColor: "red", name: "Задержка" },
+]);
 const total = computed(() => segments.value.reduce((a, c) => a + c.time, 0));
 
 const currentSegment = computed(() => {
@@ -42,20 +48,59 @@ const getProgress = (i: number) => {
 const handleChangeName = (index: number, value: string | undefined) => {
   segments.value[index].name = value;
 };
+
+const handleDragEnter = (e: DragEvent, index: number) => {
+  e.preventDefault();
+
+  if (!dragId.value) return;
+
+  const dragIndex = segments.value.findIndex((s) => s.id === dragId.value);
+
+  if (dragIndex === index || dragIndex === index - 1) return;
+
+  if (dragIndex < index) {
+    segments.value = move(segments.value, dragIndex, index - 1);
+  } else {
+    segments.value = move(segments.value, dragIndex, index);
+  }
+};
 </script>
 
 <template>
-  <div
-    class="grid justify-center gap-1"
-    :style="{
-      gridTemplateColumns: segments.map((s) => `${s.time}fr`).join(' '),
-    }"
+  <TransitionGroup
+    tag="div"
+    name="move"
+    class="relative flex justify-center gap-1"
   >
-    <Segment
-      v-for="(segment, i) in segments"
-      :data="segment"
-      :progress="getProgress(i)"
-      @changeName="(value) => handleChangeName(i, value)"
-    />
-  </div>
+    <div key="dropper-1" :class="['relative', dragId !== null && 'z-20']">
+      <div
+        class="absolute left-1/2 top-0 h-full w-10 -translate-x-1/2"
+        @dragenter="(e) => handleDragEnter(e, 0)"
+      ></div>
+    </div>
+    <template v-for="(segment, index) in segments" :key="segment.id">
+      <Segment
+        :draggable="draggable"
+        :data="segment"
+        :progress="getProgress(index)"
+        @changeName="(value) => handleChangeName(index, value)"
+        @dragStart="dragId = segment.id"
+        @dragEnd="dragId = null"
+        :isDragging="dragId === segment.id"
+      />
+
+      <div :class="['relative', dragId !== null && 'z-20']">
+        <div
+          class="absolute left-1/2 top-0 h-full w-10 -translate-x-1/2"
+          @dragenter="(e) => handleDragEnter(e, index + 1)"
+        ></div>
+      </div>
+    </template>
+  </TransitionGroup>
 </template>
+
+<style>
+.move-move {
+  @apply transition-all;
+}
+</style>
