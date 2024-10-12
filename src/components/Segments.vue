@@ -49,6 +49,14 @@ const handleChangeName = (index: number, value: string | undefined) => {
   segments.value[index].name = value;
 };
 
+const handleDelete = (id: string) => {
+  const index = segments.value.findIndex((s) => s.id === id);
+
+  if (index === -1) return;
+
+  segments.value.splice(index, 1);
+};
+
 const handleDragEnter = (e: DragEvent, index: number) => {
   e.preventDefault();
 
@@ -84,6 +92,7 @@ const handleDragEnter = (e: DragEvent, index: number) => {
         :data="segment"
         :progress="getProgress(index)"
         @changeName="(value) => handleChangeName(index, value)"
+        @delete="handleDelete(segment.id)"
         @dragStart="dragId = segment.id"
         @dragEnd="dragId = null"
         :isDragging="dragId === segment.id"

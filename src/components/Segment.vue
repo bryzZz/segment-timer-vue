@@ -1,15 +1,24 @@
 <script setup lang="ts">
 import { Segment } from "../types";
+import SvgImage from "../assets/transh.svg";
 
-const { data, progress, onChangeName, isDragging, onDragStart, onDragEnd } =
-  defineProps<{
-    data: Segment;
-    progress: number;
-    onChangeName: (value: string | undefined) => void;
-    isDragging: boolean;
-    onDragStart: () => void;
-    onDragEnd: () => void;
-  }>();
+const {
+  data,
+  progress,
+  onChangeName,
+  onDelete,
+  isDragging,
+  onDragStart,
+  onDragEnd,
+} = defineProps<{
+  data: Segment;
+  progress: number;
+  onChangeName: (value: string | undefined) => void;
+  onDelete: () => void;
+  isDragging: boolean;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+}>();
 
 const colorsMap = {
   red: "bg-red-500",
@@ -109,6 +118,17 @@ const handleDragStart = (e: DragEvent) => {
         @input="handleChangeName"
       />
     </div>
+
+    <button
+      type="button"
+      @click="onDelete"
+      :class="[
+        'group absolute right-0 top-0 rounded-sm bg-white p-[2px] text-red-500 opacity-0 transition-opacity group-hover:opacity-100',
+        isDragging && '!opacity-0 !transition-none',
+      ]"
+    >
+      <SvgImage class="size-4 group-active:scale-90" />
+    </button>
   </div>
 </template>
 
