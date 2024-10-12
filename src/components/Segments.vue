@@ -95,7 +95,8 @@ const handleDragEnter = (e: DragEvent, index: number) => {
         @delete="handleDelete(segment.id)"
         @dragStart="dragId = segment.id"
         @dragEnd="dragId = null"
-        :isDragging="dragId === segment.id"
+        :isDragging="dragId !== null"
+        :isDraggingMe="dragId === segment.id"
       />
 
       <div :class="['relative', dragId !== null && 'z-20']">

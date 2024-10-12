@@ -16,6 +16,7 @@ const {
   onChangeName: (value: string | undefined) => void;
   onDelete: () => void;
   isDragging: boolean;
+  isDraggingMe: boolean;
   onDragStart: () => void;
   onDragEnd: () => void;
 }>();
@@ -70,8 +71,8 @@ const handleDragStart = (e: DragEvent) => {
   <div
     :class="[
       'group relative z-10 grid h-36 place-items-center overflow-hidden rounded border border-zinc-800 text-2xl',
-      isDragging && colorsMap[data.progressColor ?? 'red'],
-      isDragging && '!border-transparent text-white',
+      isDraggingMe && colorsMap[data.progressColor ?? 'red'],
+      isDraggingMe && '!border-transparent text-white',
     ]"
     draggable="true"
     @dragstart="handleDragStart"
@@ -111,7 +112,10 @@ const handleDragStart = (e: DragEvent) => {
 
     <div class="absolute inset-0 grid place-items-center pt-12">
       <input
-        class="w-full max-w-32 rounded-sm bg-transparent text-center text-base opacity-0 outline-none transition-opacity placeholder-shown:opacity-0 focus:opacity-100 group-hover:placeholder-shown:opacity-100"
+        :class="[
+          'w-full max-w-32 rounded-sm bg-transparent text-center text-base opacity-0 outline-none transition-opacity placeholder-shown:opacity-0 focus:opacity-100',
+          !isDragging && 'group-hover:placeholder-shown:opacity-100',
+        ]"
         placeholder="Без названия"
         maxlength="15"
         :value="data.name"
@@ -123,8 +127,9 @@ const handleDragStart = (e: DragEvent) => {
       type="button"
       @click="onDelete"
       :class="[
-        'group absolute right-0 top-0 rounded-sm bg-white p-[2px] text-red-500 opacity-0 transition-opacity group-hover:opacity-100',
-        isDragging && '!opacity-0 !transition-none',
+        'group absolute right-0 top-0 rounded-sm bg-white p-[2px] text-red-500 opacity-0 transition-opacity',
+        isDraggingMe && '!opacity-0 !transition-none',
+        !isDragging && 'group-hover:opacity-100',
       ]"
     >
       <SvgImage class="size-4 group-active:scale-90" />
